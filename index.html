@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es-CR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Auth System · World Cup 2026 API</title>
+<link rel="stylesheet" href="styles.css">
+
+
+</head>
+<body>
+
+  <div class="app-shell">
+
+    <header class="app-header">
+      <h1>⚽ NotiRápido Auth</h1>
+      <p class="subtitle">Sistema de autenticación JWT · World Cup 2026 API</p>
+    </header>
+
+    <!-- Banner global de estado de red -->
+    <div id="offline-banner" class="offline-banner hidden" role="status">
+      Sin conexión a internet. Algunas acciones no estarán disponibles.
+    </div>
+
+    <main class="app-main">
+
+      <!-- ===================== VISTA: LOGIN ===================== -->
+      <section id="view-login" class="view active" data-view="login">
+        <form id="form-login" class="auth-form" novalidate>
+          <h2>Iniciar sesión</h2>
+
+          <div class="field">
+            <label for="login-email">Correo electrónico</label>
+            <input type="email" id="login-email" name="email" autocomplete="email" placeholder="tu@correo.com" required>
+            <span class="field-hint" id="login-email-hint"></span>
+          </div>
+
+          <div class="field">
+            <label for="login-password">Contraseña</label>
+            <input type="password" id="login-password" name="password" autocomplete="current-password" placeholder="••••••••" required>
+            <span class="field-hint" id="login-password-hint"></span>
+          </div>
+
+          <div class="form-alert hidden" id="login-alert" role="alert"></div>
+
+          <button type="submit" class="btn btn-primary" id="login-submit">
+            <span class="btn-label">Ingresar</span>
+            <span class="btn-spinner" aria-hidden="true"></span>
+          </button>
+
+          <p class="switch-view">
+            ¿No tienes cuenta?
+            <button type="button" class="link-btn" data-nav="register">Regístrate</button>
+          </p>
+        </form>
+      </section>
+
+      <!-- ===================== VISTA: REGISTER ===================== -->
+      <section id="view-register" class="view" data-view="register">
+        <form id="form-register" class="auth-form" novalidate>
+          <h2>Crear cuenta</h2>
+
+          <div class="field">
+            <label for="register-name">Nombre completo</label>
+            <input type="text" id="register-name" name="name" autocomplete="name" placeholder="John Doe" required>
+            <span class="field-hint" id="register-name-hint"></span>
+          </div>
+
+          <div class="field">
+            <label for="register-email">Correo electrónico</label>
+            <input type="email" id="register-email" name="email" autocomplete="email" placeholder="tu@correo.com" required>
+            <span class="field-hint" id="register-email-hint"></span>
+          </div>
+
+          <div class="field">
+            <label for="register-password">Contraseña</label>
+            <input type="password" id="register-password" name="password" autocomplete="new-password" placeholder="Mínimo 6 caracteres" required>
+            <span class="field-hint" id="register-password-hint"></span>
+          </div>
+
+          <div class="form-alert hidden" id="register-alert" role="alert"></div>
+
+          <button type="submit" class="btn btn-primary" id="register-submit">
+            <span class="btn-label">Registrarme</span>
+            <span class="btn-spinner" aria-hidden="true"></span>
+          </button>
+
+          <p class="switch-view">
+            ¿Ya tienes cuenta?
+            <button type="button" class="link-btn" data-nav="login">Inicia sesión</button>
+          </p>
+        </form>
+      </section>
+
+      <!-- ===================== VISTA: PROTECTED ===================== -->
+      <section id="view-protected" class="view" data-view="protected">
+        <div class="protected-header">
+          <div>
+            <h2>Equipos — World Cup 2026</h2>
+            <p class="user-greeting" id="user-greeting"></p>
+          </div>
+          <button type="button" class="btn btn-secondary" id="logout-btn">Cerrar sesión</button>
+        </div>
+
+        <div class="form-alert hidden" id="protected-alert" role="alert"></div>
+
+        <div class="teams-toolbar">
+          <button type="button" class="btn btn-outline" id="reload-teams-btn">
+            <span class="btn-label">Recargar equipos</span>
+            <span class="btn-spinner" aria-hidden="true"></span>
+          </button>
+        </div>
+
+        <div id="teams-status" class="status-box idle">
+          Presiona "Recargar equipos" o espera la carga automática.
+        </div>
+
+        <div id="teams-grid" class="teams-grid"></div>
+      </section>
+
+    </main>
+
+    <footer class="app-footer">
+      <small>Laboratorio académico · Autenticación JWT con fetch + async/await · Sin librerías externas</small>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
