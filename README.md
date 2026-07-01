@@ -6,7 +6,6 @@ Permite registrar usuarios, iniciar sesión y acceder a una vista protegida (lis
 
 Tecnologías:
 
-
 HTML5
 CSS
 JavaScript (async/await)
