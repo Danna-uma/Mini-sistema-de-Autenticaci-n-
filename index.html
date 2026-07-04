@@ -93,33 +93,58 @@
         </form>
       </section>
 
-      <!--VISTA: PROTECTED -->
+      <!-- VISTA: PROTECTED -->
       <section id="view-protected" class="view" data-view="protected">
+
         <div class="protected-header">
           <div>
-            <h2>Equipos — World Cup 2026</h2>
+            <h2>🏆 World Cup 2026 Dashboard</h2>
             <p class="user-greeting" id="user-greeting"></p>
           </div>
-          <button type="button" class="btn btn-secondary" id="logout-btn">Cerrar sesión</button>
+
+          <button type="button" class="btn btn-secondary" id="logout-btn">
+            Cerrar sesión
+          </button>
+        </div>
+
+        <!-- Estadísticas -->
+        <div class="stats-bar">
+
+          <div class="stat-card">
+            <strong>48</strong>
+            <span>Equipos</span>
+          </div>
+
+          <div class="stat-card">
+            <strong>12</strong>
+            <span>Grupos</span>
+          </div>
+
+          <div class="stat-card">
+            <strong>3</strong>
+            <span>Países Sede</span>
+          </div>
+
         </div>
 
         <div class="form-alert hidden" id="protected-alert" role="alert"></div>
 
         <div class="teams-toolbar">
           <button type="button" class="btn btn-outline" id="reload-teams-btn">
-            <span class="btn-label">Recargar equipos</span>
+            <span class="btn-label">🔄 Recargar equipos</span>
             <span class="btn-spinner" aria-hidden="true"></span>
           </button>
         </div>
 
         <div id="teams-status" class="status-box idle">
-          Presiona "Recargar equipos" o espera la carga automática.
+          Cargando información oficial del Mundial 2026...
         </div>
 
         <div id="teams-grid" class="teams-grid"></div>
+
       </section>
 
-    </main>
+      </main>
 
     <footer class="app-footer">
       <small>Laboratorio #2 · Autenticación JWT Fifa World Cup 2026</small>
