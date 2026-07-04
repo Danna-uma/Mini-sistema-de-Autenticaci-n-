@@ -1,14 +1,13 @@
 <!DOCTYPE html>
 <html lang="es-CR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Auth System · World Cup 2026 API</title>
-    <link rel="stylesheet" href="styles.css">
-
-
+  <title>Auth System · World Cup 2026 API</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
 
   <div class="app-shell">
@@ -18,77 +17,76 @@
       <p class="subtitle">Sistema de autenticación JWT · Equipos del Mundial 2026</p>
     </header>
 
-    <!-- Banner global de estado de red -->
-    <div id="offline-banner" class="offline-banner hidden" role="status">
+    <div id="offline-banner" class="offline-banner hidden" role="status" aria-live="polite">
       Sin conexión a internet. Algunas acciones no estarán disponibles.
     </div>
 
     <main class="app-main">
 
-      <!--VISTA: LOGIN-->
+      <!-- VISTA: LOGIN -->
       <section id="view-login" class="view active" data-view="login">
         <form id="form-login" class="auth-form" novalidate>
           <h2>Iniciar sesión</h2>
 
           <div class="field">
             <label for="login-email">Correo electrónico</label>
-            <input type="email" id="login-email" name="email" autocomplete="email" placeholder="tu@correo.com" required>
-            <span class="field-hint" id="login-email-hint"></span>
+            <input type="email" id="login-email" name="email" autocomplete="email" placeholder="tu@correo.com" required aria-describedby="login-email-hint" tabindex="1">
+            <span class="field-hint" id="login-email-hint" aria-live="polite"></span>
           </div>
 
           <div class="field">
             <label for="login-password">Contraseña</label>
-            <input type="password" id="login-password" name="password" autocomplete="current-password" placeholder="••••••••" required>
-            <span class="field-hint" id="login-password-hint"></span>
+            <input type="password" id="login-password" name="password" autocomplete="current-password" placeholder="••••••••" required aria-describedby="login-password-hint" tabindex="2">
+            <span class="field-hint" id="login-password-hint" aria-live="polite"></span>
           </div>
 
-          <div class="form-alert hidden" id="login-alert" role="alert"></div>
+          <div class="form-alert hidden" id="login-alert" role="alert" aria-live="polite"></div>
 
-          <button type="submit" class="btn btn-primary" id="login-submit">
+          <button type="submit" class="btn btn-primary" id="login-submit" tabindex="3">
             <span class="btn-label">Ingresar</span>
             <span class="btn-spinner" aria-hidden="true"></span>
           </button>
 
           <p class="switch-view">
             ¿No tienes cuenta?
-            <button type="button" class="link-btn" data-nav="register">Regístrate</button>
+            <button type="button" class="link-btn" data-nav="register" tabindex="4">Regístrate</button>
           </p>
         </form>
       </section>
 
-      <!--VISTA: REGISTER-->
+      <!-- VISTA: REGISTER -->
       <section id="view-register" class="view" data-view="register">
         <form id="form-register" class="auth-form" novalidate>
           <h2>Crear cuenta</h2>
 
           <div class="field">
             <label for="register-name">Nombre completo</label>
-            <input type="text" id="register-name" name="name" autocomplete="name" placeholder="John Doe" required>
-            <span class="field-hint" id="register-name-hint"></span>
+            <input type="text" id="register-name" name="name" autocomplete="name" placeholder="John Doe" required aria-describedby="register-name-hint" tabindex="1">
+            <span class="field-hint" id="register-name-hint" aria-live="polite"></span>
           </div>
 
           <div class="field">
             <label for="register-email">Correo electrónico</label>
-            <input type="email" id="register-email" name="email" autocomplete="email" placeholder="tu@correo.com" required>
-            <span class="field-hint" id="register-email-hint"></span>
+            <input type="email" id="register-email" name="email" autocomplete="email" placeholder="tu@correo.com" required aria-describedby="register-email-hint" tabindex="2">
+            <span class="field-hint" id="register-email-hint" aria-live="polite"></span>
           </div>
 
           <div class="field">
             <label for="register-password">Contraseña</label>
-            <input type="password" id="register-password" name="password" autocomplete="new-password" placeholder="Mínimo 6 caracteres" required>
-            <span class="field-hint" id="register-password-hint"></span>
+            <input type="password" id="register-password" name="password" autocomplete="new-password" placeholder="Mínimo 6 caracteres" required aria-describedby="register-password-hint" tabindex="3">
+            <span class="field-hint" id="register-password-hint" aria-live="polite"></span>
           </div>
 
-          <div class="form-alert hidden" id="register-alert" role="alert"></div>
+          <div class="form-alert hidden" id="register-alert" role="alert" aria-live="polite"></div>
 
-          <button type="submit" class="btn btn-primary" id="register-submit">
+          <button type="submit" class="btn btn-primary" id="register-submit" tabindex="4">
             <span class="btn-label">Registrarme</span>
             <span class="btn-spinner" aria-hidden="true"></span>
           </button>
 
           <p class="switch-view">
             ¿Ya tienes cuenta?
-            <button type="button" class="link-btn" data-nav="login">Inicia sesión</button>
+            <button type="button" class="link-btn" data-nav="login" tabindex="5">Inicia sesión</button>
           </p>
         </form>
       </section>
@@ -102,53 +100,51 @@
             <p class="user-greeting" id="user-greeting"></p>
           </div>
 
-          <button type="button" class="btn btn-secondary" id="logout-btn">
+          <button type="button" class="btn btn-secondary" id="logout-btn" aria-label="Cerrar sesión" tabindex="1">
             Cerrar sesión
           </button>
         </div>
 
-        <!-- Estadísticas -->
-        <div class="stats-bar">
-
-          <div class="stat-card">
+        <div class="stats-bar" > 
+          <div class="stat-card" tabindex="2">
             <strong>48</strong>
             <span>Equipos</span>
           </div>
 
-          <div class="stat-card">
+          <div class="stat-card" tabindex="3">
             <strong>12</strong>
-            <span>Grupos</span>
+            <span>Grupos</span>                 
           </div>
 
-          <div class="stat-card">
+          <div class="stat-card" tabindex="4">
             <strong>3</strong>
             <span>Países Sede</span>
           </div>
-
         </div>
 
-        <div class="form-alert hidden" id="protected-alert" role="alert"></div>
+        <div class="form-alert hidden" id="protected-alert" role="alert" aria-live="polite"></div>
 
         <div class="teams-toolbar">
-          <button type="button" class="btn btn-outline" id="reload-teams-btn">
-            <span class="btn-label">🔄 Recargar equipos</span>
+          <button type="button" class="btn btn-outline" id="reload-teams-btn" aria-label="Actualizar equipos del Mundial 2026" tabindex="5">
+            <span class="btn-label">🔄 Actualizar equipos</span>
             <span class="btn-spinner" aria-hidden="true"></span>
           </button>
         </div>
 
-        <div id="teams-status" class="status-box idle">
+        <div id="teams-status" class="status-box idle" role="status" aria-live="polite">
           Cargando información oficial del Mundial 2026...
         </div>
 
-        <div id="teams-grid" class="teams-grid"></div>
+        <div id="teams-grid" class="teams-grid" aria-label="Lista de equipos del Mundial 2026"></div>
 
       </section>
 
-      </main>
+    </main>
 
     <footer class="app-footer">
       <small>Laboratorio #2 · Autenticación JWT Fifa World Cup 2026</small>
     </footer>
+
   </div>
 
   <script src="app.js"></script>

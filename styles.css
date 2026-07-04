@@ -398,6 +398,16 @@ body {
   border-color: #3b82f6;
 }
 
+.stat-card:focus {
+    outline: 3px solid #4da3ff;
+    outline-offset: 4px;
+}
+
+.stat-card:focus-visible {
+    outline: 3px solid #4da3ff;
+    outline-offset: 4px;
+}
+
 .stat-card strong {
   display: block;
   font-size: 2.2rem;
@@ -437,6 +447,17 @@ body {
   background: rgba(30, 41, 59, 0.72);
 }
 
+.team-card:focus {
+  outline: 3px solid #facc15;
+  outline-offset: 4px;
+  transform: translateY(-4px);
+}
+
+.team-card:focus-visible {
+  outline: 3px solid #facc15;
+  outline-offset: 4px;
+}
+
 .team-card img {
   width: 110px;
   height: 70px;
@@ -457,6 +478,13 @@ body {
 .team-meta {
   color: #cbd5e1;
   font-size: 0.82rem;
+}
+
+.btn:focus-visible,
+.stat-card:focus-visible,
+.team-card:focus-visible {
+  outline: 3px solid #3b82f6;
+  outline-offset: 4px;
 }
 
 /* RESPONSIVE */

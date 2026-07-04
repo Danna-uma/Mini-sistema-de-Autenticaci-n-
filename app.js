@@ -438,11 +438,15 @@ function renderTeams(teams) {
     const group = team.groups || team.group || "";
     const flag = team.flag || team.flag_url || "";
 
-    card.innerHTML = `${flag ? `<img src="${flag}" alt="Bandera ${name}" loading="lazy">` : ""}
+    card.setAttribute("tabindex", "0");
+    card.setAttribute("role", "article");
+    card.setAttribute("aria-label",`${name}${code ? ", código FIFA " + code : ""}${group ? ", grupo " + group : ""}`);
+
+    card.innerHTML = `${flag ? `<img src="${flag}" alt="Bandera de ${name}" loading="lazy">` : ""}
       <span class="team-name">${name}</span>
       <span class="team-meta">${code}${group ? " · Grupo " + group : ""}</span>`;
-    fragment.appendChild(card);
-  });
+
+    fragment.appendChild(card);});
 
   teamsGrid.appendChild(fragment);
 }
