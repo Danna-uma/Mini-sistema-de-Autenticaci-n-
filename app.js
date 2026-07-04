@@ -1,41 +1,19 @@
-/* ============================================================
- * app.js — Sistema de autenticación JWT
- * API: https://worldcup26.ir
- *
- * Reglas de este laboratorio:
- *  - Solo async/await (nunca .then()/.catch())
- *  - Nunca alert()
- *  - Todo error 400 se lee del BODY (response.json()), no solo el status
- *  - 401 -> limpiar sesión + volver a login
- *  - Los inputs nunca se vacían al fallar
- * ============================================================ */
+const API_BASE = "http://localhost:3050";
+const TEAMS_JSON_URL =
+  "https://raw.githubusercontent.com/rezarahiminia/worldcup2026/refs/heads/main/football.teams.json";
 
-const API_BASE = "https://worldcup26.ir";
 const TOKEN_KEY = "jwt_token";
 const USER_KEY = "auth_user";
 
-/* ------------------------------------------------------------
- * Errores personalizados: permiten diferenciar la causa real
- * del fallo en cada catch (red / 401 / 400 con body).
- * ---------------------------------------------------------- */
 class NetworkError extends Error {}
 class AuthError extends Error {}
 class ApiError extends Error {
   constructor(message, body) {
     super(message);
-    this.body = body; // JSON completo devuelto por el backend
+    this.body = body; 
   }
 }
 
-/* ------------------------------------------------------------
- * Cliente HTTP centralizado
- * ------------------------------------------------------------
- * - Adjunta Authorization: Bearer <token> si auth = true
- * - SIEMPRE intenta leer el body con response.json()
- * - Traduce 401 -> AuthError (y limpia la sesión)
- * - Traduce 400 -> ApiError con el mensaje real del backend
- * - Traduce fallas de fetch (offline, DNS, CORS bloqueado) -> NetworkError
- * ---------------------------------------------------------- */
 async function apiRequest(endpoint, { method = "GET", body = null, auth = false } = {}) {
   const headers = { "Content-Type": "application/json" };
 
@@ -55,19 +33,16 @@ async function apiRequest(endpoint, { method = "GET", body = null, auth = false 
       body: body ? JSON.stringify(body) : undefined,
     });
   } catch (networkFailure) {
-    // fetch lanza TypeError cuando no hay red, DNS falla, o CORS bloquea la petición
     throw new NetworkError(
       "No se pudo conectar con el servidor. Revisa tu conexión a internet."
     );
   }
 
-  // Intentamos parsear el body SIEMPRE, incluso en errores,
-  // porque el backend manda el detalle del error ahí (no solo en el status).
   let data = null;
   try {
     data = await response.json();
   } catch (parseFailure) {
-    data = null; // body vacío o no-JSON (ej. 204, o caída intermedia)
+    data = null; 
   }
 
   if (response.status === 401) {
@@ -89,16 +64,36 @@ async function apiRequest(endpoint, { method = "GET", body = null, auth = false 
   return data;
 }
 
-// El backend puede usar distintas claves para el mensaje de error según el endpoint.
-// Cubrimos las variantes documentadas ("message") y un fallback razonable ("error").
 function extractMessage(data) {
   if (!data) return null;
   return data.message || data.error || null;
 }
 
-/* ============================================================
- * SESIÓN (localStorage)
- * ============================================================ */
+async function fetchTeamsJson() {
+  let response;
+  try {
+    response = await fetch(TEAMS_JSON_URL);
+  } catch (networkFailure) {
+    throw new NetworkError(
+      "No se pudo conectar para obtener los equipos. Revisa tu conexión a internet."
+    );
+  }
+
+  if (!response.ok) {
+    throw new ApiError(`No se pudo obtener el archivo de equipos (status ${response.status}).`);
+  }
+
+  let data;
+  try {
+    data = await response.json();
+  } catch (parseFailure) {
+    throw new ApiError("El archivo de equipos no tiene un formato JSON válido.");
+  }
+
+  return data;
+}
+
+/* SESIÓN (localStorage) */
 function saveSession(token, user) {
   localStorage.setItem(TOKEN_KEY, token);
   localStorage.setItem(USER_KEY, JSON.stringify(user || {}));
@@ -121,9 +116,7 @@ function hasSession() {
   return Boolean(localStorage.getItem(TOKEN_KEY));
 }
 
-/* ============================================================
- * NAVEGACIÓN ENTRE VISTAS
- * ============================================================ */
+/* NAVEGACIÓN ENTRE VISTAS*/
 function showView(name) {
   document.querySelectorAll(".view").forEach((section) => {
     section.classList.toggle("active", section.dataset.view === name);
@@ -134,9 +127,7 @@ document.querySelectorAll("[data-nav]").forEach((btn) => {
   btn.addEventListener("click", () => showView(btn.dataset.nav));
 });
 
-/* ============================================================
- * VALIDACIÓN EN TIEMPO REAL
- * ============================================================ */
+/* VALIDACIÓN EN TIEMPO REAL */
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function validateEmailField(inputEl, hintEl) {
@@ -216,26 +207,19 @@ registerName.addEventListener("input", () => validateNameField(registerName, reg
 registerEmail.addEventListener("input", () => validateEmailField(registerEmail, registerEmailHint));
 registerPassword.addEventListener("input", () => validatePasswordField(registerPassword, registerPasswordHint));
 
-/* ============================================================
- * ESTADOS VISUALES DE BOTÓN (idle / loading)
- * ============================================================ */
+/*ESTADOS VISUALES DE BOTÓN (idle / loading) */
 function setButtonLoading(buttonEl, isLoading) {
   buttonEl.disabled = isLoading;
   buttonEl.classList.toggle("loading", isLoading);
 }
 
-// Deshabilita/habilita todos los inputs de un formulario mientras la
-// petición está en curso. Nunca toca .value, así que el texto escrito
-// por el usuario permanece intacto pase lo que pase.
 function setFormDisabled(formEl, disabled) {
   formEl.querySelectorAll("input").forEach((input) => {
     input.disabled = disabled;
   });
 }
 
-/* ============================================================
- * ALERTAS EN FORMULARIO (reemplazo de alert())
- * ============================================================ */
+/* ALERTAS EN FORMULARIO*/
 function showAlert(alertEl, type, message) {
   alertEl.textContent = message;
   alertEl.classList.remove("hidden", "error", "success");
@@ -247,9 +231,7 @@ function hideAlert(alertEl) {
   alertEl.textContent = "";
 }
 
-/* ============================================================
- * REGISTRO DE USUARIO
- * ============================================================ */
+/* REGISTRO DE USUARIO*/
 const formRegister = document.getElementById("form-register");
 const registerAlert = document.getElementById("register-alert");
 const registerSubmit = document.getElementById("register-submit");
@@ -291,7 +273,6 @@ formRegister.addEventListener("submit", async (event) => {
     saveSession(data.token, data.user);
     showAlert(registerAlert, "success", "Cuenta creada correctamente. Redirigiendo...");
 
-    // Pequeña pausa para que el usuario vea el estado "success" antes de navegar
     await sleep(500);
     enterProtectedView();
   } catch (error) {
@@ -308,9 +289,7 @@ formRegister.addEventListener("submit", async (event) => {
   }
 });
 
-/* ============================================================
- * LOGIN DE USUARIO
- * ============================================================ */
+/* LOGIN DE USUARIO*/
 const formLogin = document.getElementById("form-login");
 const loginAlert = document.getElementById("login-alert");
 const loginSubmit = document.getElementById("login-submit");
@@ -363,12 +342,6 @@ formLogin.addEventListener("submit", async (event) => {
   }
 });
 
-/* ------------------------------------------------------------
- * Manejo centralizado de errores de formulario.
- * Diferencia el tipo real de error (red / 400 / 401 / desconocido)
- * y decide: qué mensaje mostrar y a qué input llevar el focus().
- * Los valores de los inputs NUNCA se tocan aquí (no se limpian).
- * ---------------------------------------------------------- */
 function handleFormError(error, { alertEl, fieldsByKeyword, fallbackInput }) {
   if (error instanceof NetworkError) {
     showAlert(alertEl, "error", "⚠️ " + error.message);
@@ -376,8 +349,6 @@ function handleFormError(error, { alertEl, fieldsByKeyword, fallbackInput }) {
   }
 
   if (error instanceof ApiError) {
-    // Buscamos si el mensaje del backend corresponde a un campo específico,
-    // para marcarlo visualmente e ir con focus() directo a él.
     const lowerMsg = (error.message || "").toLowerCase();
     const match = fieldsByKeyword.find((f) =>
       f.keywords.some((kw) => lowerMsg.includes(kw))
@@ -395,19 +366,15 @@ function handleFormError(error, { alertEl, fieldsByKeyword, fallbackInput }) {
   }
 
   if (error instanceof AuthError) {
-    // Poco común en login/register, pero se cubre por robustez
     showAlert(alertEl, "error", error.message);
     return;
   }
 
-  // Error verdaderamente inesperado
   showAlert(alertEl, "error", "Ocurrió un error inesperado. Intenta de nuevo.");
   console.error(error);
 }
 
-/* ============================================================
- * VISTA PROTEGIDA — LISTA DE EQUIPOS
- * ============================================================ */
+/* VISTA PROTEGIDA — LISTA DE EQUIPOS (Mundial 2026) */
 const teamsGrid = document.getElementById("teams-grid");
 const teamsStatus = document.getElementById("teams-status");
 const protectedAlert = document.getElementById("protected-alert");
@@ -434,37 +401,25 @@ async function loadTeams() {
   hideAlert(protectedAlert);
   teamsGrid.innerHTML = "";
   setButtonLoading(reloadTeamsBtn, true);
-  setTeamsStatus("loading", "Cargando equipos...");
+  setTeamsStatus("loading", "Cargando equipos del Mundial 2026...");
 
   try {
-    const data = await apiRequest("/get/teams", { auth: true });
-
-    // La API puede devolver un array plano o un objeto envolvente.
-    // Cubrimos ambos casos sin asumir una forma que no está confirmada.
-    const teams = Array.isArray(data)
-      ? data
-      : data?.teams || data?.data || [];
+    const data = await fetchTeamsJson();
+    const teams = Array.isArray(data) ? data : data?.teams || data?.data || [];
 
     if (!teams.length) {
-      setTeamsStatus("error", "El servidor no devolvió equipos.");
+      setTeamsStatus("error", "El archivo de equipos no contiene datos.");
       return;
     }
 
     renderTeams(teams);
     setTeamsStatus("success", `${teams.length} equipos cargados correctamente.`);
   } catch (error) {
-    if (error instanceof AuthError) {
-      // Sesión inválida (token manipulado/expirado): ya se limpió en apiRequest.
-      showView("login");
-      hideAlert(loginAlert);
-      showAlert(loginAlert, "error", error.message);
-      return;
-    }
     if (error instanceof NetworkError) {
       setTeamsStatus("error", "⚠️ " + error.message);
-      return;
+    } else {
+      setTeamsStatus("error", error.message || "No se pudieron cargar los equipos.");
     }
-    setTeamsStatus("error", error.message || "No se pudieron cargar los equipos.");
   } finally {
     setButtonLoading(reloadTeamsBtn, false);
   }
@@ -479,14 +434,13 @@ function renderTeams(teams) {
     card.className = "team-card";
 
     const name = team.name_en || team.name || "Equipo";
-    const code = team.fifa_code || "";
+    const code = team.fifa_code || team.code || "";
     const group = team.groups || team.group || "";
+    const flag = team.flag || team.flag_url || "";
 
-    card.innerHTML = `
-      ${team.flag ? `<img src="${team.flag}" alt="Bandera ${name}" loading="lazy">` : ""}
+    card.innerHTML = `${flag ? `<img src="${flag}" alt="Bandera ${name}" loading="lazy">` : ""}
       <span class="team-name">${name}</span>
-      <span class="team-meta">${code}${group ? " · Grupo " + group : ""}</span>
-    `;
+      <span class="team-meta">${code}${group ? " · Grupo " + group : ""}</span>`;
     fragment.appendChild(card);
   });
 
@@ -504,9 +458,7 @@ logoutBtn.addEventListener("click", () => {
   showView("login");
 });
 
-/* ============================================================
- * DETECCIÓN DE ESTADO DE RED (modo offline del navegador)
- * ============================================================ */
+/* DETECCIÓN DE ESTADO DE RED (modo offline del navegador)*/
 const offlineBanner = document.getElementById("offline-banner");
 
 function updateOnlineStatus() {
@@ -516,16 +468,12 @@ function updateOnlineStatus() {
 window.addEventListener("online", updateOnlineStatus);
 window.addEventListener("offline", updateOnlineStatus);
 
-/* ============================================================
- * UTILIDADES
- * ============================================================ */
+/* UTILIDADES */
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-/* ============================================================
- * INICIALIZACIÓN
- * ============================================================ */
+/* INICIALIZACIÓN*/
 (function init() {
   updateOnlineStatus();
 
