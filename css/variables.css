@@ -1,0 +1,18 @@
+:root {
+  --color-bg: #020617;
+  --color-surface: rgba(15, 23, 42, 0.58);
+  --color-surface-light: rgba(30, 41, 59, 0.75);
+  --color-border: rgba(255, 255, 255, 0.16);
+  --color-text: #ffffff;
+  --color-text-muted: #cbd5e1;
+  --color-primary: #3b82f6;
+  --color-primary-hover: #2563eb;
+  --color-success: #22c55e;
+  --color-success-bg: rgba(20, 83, 45, 0.45);
+  --color-error: #ef4444;
+  --color-error-bg: rgba(127, 29, 29, 0.45);
+  --color-warning: #f59e0b;
+  --color-gold: #facc15;
+  --radius: 18px;
+  font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}

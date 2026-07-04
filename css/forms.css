@@ -1,0 +1,97 @@
+.auth-form {
+  width: 100%;
+  max-width: 500px;
+  margin: 60px auto;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(18px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 22px;
+  padding: 35px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.35);
+}
+
+.auth-form h2 {
+  margin: 0 0 8px;
+  text-align: center;
+  color: #ffffff;
+  font-size: 1.7rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.field label {
+  font-size: 0.95rem;
+  color: #ffffff;
+}
+
+.field input {
+  background: rgba(2, 6, 23, 0.55);
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  border-radius: 12px;
+  padding: 13px 14px;
+  color: #ffffff;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.field input::placeholder {
+  color: #94a3b8;
+}
+
+.field input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+}
+
+.field input.invalid {
+  border-color: var(--color-error);
+}
+
+.field input.valid {
+  border-color: var(--color-success);
+}
+
+.field input:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  background: rgba(30, 41, 59, 0.7);
+}
+
+.field-hint {
+  font-size: 0.8rem;
+  min-height: 14px;
+  color: #cbd5e1;
+}
+
+.field-hint.error {
+  color: #fca5a5;
+}
+
+.field-hint.success {
+  color: #86efac;
+}
+
+.switch-view {
+  text-align: center;
+  font-size: 0.95rem;
+  color: #ffffff;
+  margin: 0;
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  color: #60a5fa;
+  cursor: pointer;
+  font-size: 0.95rem;
+  padding: 0;
+  text-decoration: underline;
+}

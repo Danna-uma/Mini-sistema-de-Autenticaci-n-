@@ -1,0 +1,56 @@
+@media (max-width: 900px) {
+  .stats-bar {
+    grid-template-columns: 1fr;
+  }
+
+  .protected-header {
+    align-items: stretch;
+  }
+
+  .protected-header .btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .app-shell {
+    padding: 34px 14px;
+  }
+
+  .app-header {
+    margin-bottom: 30px;
+  }
+
+  .app-main {
+    padding: 22px;
+  }
+
+  .auth-form {
+    padding: 26px;
+    max-width: 100%;
+  }
+
+  .teams-grid {
+    grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+    gap: 12px;
+  }
+
+  .team-card img {
+    width: 90px;
+    height: 58px;
+  }
+}
+
+@media (max-width: 480px) {
+  .app-header h1 {
+    font-size: 2rem;
+  }
+
+  .subtitle {
+    font-size: 0.9rem;
+  }
+
+  .teams-grid {
+    grid-template-columns: 1fr;
+  }
+}

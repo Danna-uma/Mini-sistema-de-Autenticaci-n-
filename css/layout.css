@@ -1,0 +1,80 @@
+.app-header {
+  text-align: center;
+  margin-bottom: 45px;
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: clamp(2.2rem, 4vw, 3rem);
+  color: #ffffff;
+  font-weight: 800;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.75);
+  letter-spacing: 0.5px;
+}
+
+.subtitle {
+  margin-top: 10px;
+  color: #e2e8f0;
+  font-size: 1rem;
+  text-shadow: 0 3px 12px rgba(0, 0, 0, 0.7);
+}
+
+.app-shell {
+  width: 100%;
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 52px 24px 42px;
+}
+
+.app-main {
+  width: 100%;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  backdrop-filter: none;
+  padding: 0;
+}
+
+.view {
+  display: none;
+}
+
+.view.active {
+  display: block;
+  animation: fadeIn 0.25s ease;
+}
+
+.protected-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 25px;
+  flex-wrap: wrap;
+}
+
+.protected-header h2 {
+  color: #ffffff;
+  font-size: 1.8rem;
+  margin: 0;
+  text-shadow: 0 3px 12px rgba(0, 0, 0, 0.6);
+}
+
+.user-greeting {
+  color: #ffffff;
+  font-size: 0.95rem;
+  margin: 8px 0 0;
+}
+
+.teams-toolbar {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.app-footer {
+  margin-top: 25px;
+  text-align: center;
+  color: #ffffff;
+  text-shadow: 0 3px 10px rgba(0, 0, 0, 0.7);
+}
