@@ -1,87 +1,166 @@
-import { API_BASE, TEAMS_JSON_URL } from "./config.js";
-import { NetworkError, AuthError, ApiError } from "./errors.js";
-import { getToken, clearSession } from "./storage.js";
+import { API_BASE } from "./config.js";
+import {NetworkError, AuthError, ApiError,} from "./errors.js";
+import { getToken } from "./storage.js";
 
-function extractMessage(data) {
-  if (!data) return null;
-  return data.message || data.error || null;
+/**
+ * Convierte la respuesta HTTP en JSON o texto.
+ *
+ * @param {Response} response
+ * @returns {Promise<any>}
+ */
+async function parseResponse(response) {
+
+  if (response.status === 204) {
+    return null;
+  }
+
+  const contentType =
+    response.headers.get("content-type") || "";
+
+  if (contentType.includes("application/json")) {
+    try {
+      return await response.json();
+    } catch {
+      return null;
+    }
+  }
+
+  try {
+    const text = await response.text();
+
+    return text || null;
+  } catch {
+    return null;
+  }
 }
 
-export async function apiRequest(endpoint, { method = "GET", body = null, auth = false } = {}) {
-  const headers = { "Content-Type": "application/json" };
+/**
+ * Extrae un mensaje de error desde la respuesta.
+ *
+ * @param {any} data
+ * @param {string} defaultMessage
+ * @returns {string}
+ */
+function getErrorMessage(data, defaultMessage) {
+  if (
+    typeof data === "string" &&
+    data.trim() !== ""
+  ) {
+    return data;
+  }
+
+  if (data && typeof data === "object") {
+    return (
+      data.message ||
+      data.error ||
+      data.msg ||
+      defaultMessage
+    );
+  }
+
+  return defaultMessage;
+}
+
+/**
+ * Realiza una petición HTTP utilizando el proxy local.
+ *
+ * @param {string} endpoint
+ * @param {{
+ *   method?: string,
+ *   body?: object | null,
+ *   auth?: boolean
+ * }} options
+ *
+ * @returns {Promise<any>}
+ */
+export async function apiRequest(
+  endpoint,
+  {
+    method = "GET",
+    body = null,
+    auth = false,
+  } = {},
+) {
+  const headers = {
+    Accept: "application/json",
+  };
+
+  if (body !== null) {
+    headers["Content-Type"] = "application/json";
+  }
 
   if (auth) {
     const token = getToken();
 
     if (!token) {
-      throw new AuthError("No hay una sesión activa.");
+      throw new AuthError(
+        "No existe una sesión activa. Inicia sesión nuevamente.",
+      );
     }
 
-    headers["Authorization"] = `Bearer ${token}`;
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  const requestOptions = {
+    method,
+    headers,
+  };
+
+  if (body !== null) {
+    requestOptions.body = JSON.stringify(body);
   }
 
   let response;
 
   try {
-    response = await fetch(`${API_BASE}${endpoint}`, {
-      method,
-      headers,
-      body: body ? JSON.stringify(body) : undefined,
-    });
-  } catch {
+    response = await fetch(
+      `${API_BASE}${endpoint}`,
+      requestOptions,
+    );
+  } catch (error) {
+    console.error(
+      "No fue posible realizar la petición:",
+      error,
+    );
+
     throw new NetworkError(
-      "No se pudo conectar con el servidor. Revisa tu conexión a internet."
+      "No se pudo conectar con el proxy local. Verifica que proxy.js esté ejecutándose en http://localhost:3050.",
     );
   }
 
-  let data = null;
-
-  try {
-    data = await response.json();
-  } catch {
-    data = null;
-  }
+  const data = await parseResponse(response);
 
   if (response.status === 401) {
-    clearSession();
-    const message =
-      extractMessage(data) || "Sesión inválida o expirada. Inicia sesión nuevamente.";
-    throw new AuthError(message);
+    throw new AuthError(
+      getErrorMessage(
+        data,
+        "La sesión es inválida o ha expirado.",
+      ),
+    );
   }
 
   if (response.status === 400) {
-    const message = extractMessage(data) || "Solicitud inválida.";
-    throw new ApiError(message, data);
-  }
-
-  if (!response.ok) {
-    const message = extractMessage(data) || `Error del servidor (${response.status}).`;
-    throw new ApiError(message, data);
-  }
-
-  return data;
-}
-
-export async function fetchTeamsJson() {
-  let response;
-
-  try {
-    response = await fetch(TEAMS_JSON_URL);
-  } catch {
-    throw new NetworkError(
-      "No se pudo conectar para obtener los equipos. Revisa tu conexión a internet."
+    throw new ApiError(
+      getErrorMessage(
+        data,
+        "Los datos enviados no son válidos.",
+      ),
+      response.status,
+      data,
     );
   }
+
 
   if (!response.ok) {
     throw new ApiError(
-      `No se pudo obtener el archivo de equipos (status ${response.status}).`
+      getErrorMessage(
+        data,
+        `La petición falló con el código ${response.status}.`,
+      ),
+      response.status,
+      data,
     );
   }
 
-  try {
-    return await response.json();
-  } catch {
-    throw new ApiError("El archivo de equipos no tiene un formato JSON válido.");
-  }
+  return data;
 }

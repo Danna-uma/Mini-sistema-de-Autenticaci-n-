@@ -1,20 +1,8 @@
 import { apiRequest } from "./api.js";
 import { ApiError, AuthError, NetworkError } from "./errors.js";
 import { saveSession, clearSession, getStoredUser } from "./storage.js";
-import {
-  validateEmailField,
-  validatePasswordField,
-  validateNameField,
-  setFieldState,
-} from "./validation.js";
-import {
-  showView,
-  setButtonLoading,
-  setFormDisabled,
-  showAlert,
-  hideAlert,
-  sleep,
-} from "./ui.js";
+import {validateEmailField,validatePasswordField,validateNameField,setFieldState,} from "./validation.js";
+import {showView, setButtonLoading,setFormDisabled,showAlert,hideAlert,sleep,} from "./ui.js";
 import { loadTeams } from "./teams.js";
 
 const loginEmail = document.getElementById("login-email");
