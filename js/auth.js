@@ -3,7 +3,13 @@ import { ApiError, AuthError, NetworkError } from "./errors.js";
 import { saveSession, clearSession, getStoredUser } from "./storage.js";
 import {validateEmailField,validatePasswordField,validateNameField,setFieldState,} from "./validation.js";
 import {showView, setButtonLoading,setFormDisabled,showAlert,hideAlert,sleep,} from "./ui.js";
-import { loadTeams } from "./teams.js";
+import { loadTeams, clearTeamsView } from "./teams.js";
+
+let loginAttempts = 0;
+let loginBlockedUntil = 0;
+
+const MAX_LOGIN_ATTEMPTS = 5;
+const BLOCK_TIME = 60000;
 
 const loginEmail = document.getElementById("login-email");
 const loginEmailHint = document.getElementById("login-email-hint");
@@ -34,7 +40,14 @@ export function setupAuth() {
   );
 
   loginPassword.addEventListener("input", () =>
-    validatePasswordField(loginPassword, loginPasswordHint)
+    validatePasswordField(
+      loginPassword,
+      loginPasswordHint,
+      {
+        minLength: 6,
+        requireUppercase: false,
+      }
+    )
   );
 
   registerName.addEventListener("input", () =>
@@ -46,7 +59,14 @@ export function setupAuth() {
   );
 
   registerPassword.addEventListener("input", () =>
-    validatePasswordField(registerPassword, registerPasswordHint)
+    validatePasswordField(
+      registerPassword,
+      registerPasswordHint,
+      {
+        minLength: 6,
+        requireUppercase: true,
+      }
+    )
   );
 
   formRegister.addEventListener("submit", handleRegisterSubmit);
@@ -64,7 +84,14 @@ async function handleRegisterSubmit(event) {
 
   const validName = validateNameField(registerName, registerNameHint);
   const validEmail = validateEmailField(registerEmail, registerEmailHint);
-  const validPassword = validatePasswordField(registerPassword, registerPasswordHint);
+  const validPassword = validatePasswordField(
+    registerPassword,
+    registerPasswordHint,
+    {
+      minLength: 6,
+      requireUppercase: true,
+    }
+  );
 
   if (!validName) {
     registerName.focus();
@@ -91,7 +118,12 @@ async function handleRegisterSubmit(event) {
     });
 
     saveSession(data.token, data.user);
-    showAlert(registerAlert, "success", "Cuenta creada correctamente. Redirigiendo...");
+
+    showAlert(
+      registerAlert,
+      "success",
+      "Cuenta creada correctamente. Redirigiendo..."
+    );
 
     await sleep(500);
     enterProtectedView();
@@ -117,11 +149,33 @@ async function handleLoginSubmit(event) {
   event.preventDefault();
   hideAlert(loginAlert);
 
+  if (Date.now() < loginBlockedUntil) {
+    const remainingSeconds = Math.ceil(
+      (loginBlockedUntil - Date.now()) / 1000
+    );
+
+    showAlert(
+      loginAlert,
+      "error",
+      `Demasiados intentos fallidos. Intenta nuevamente en ${remainingSeconds} segundos.`
+    );
+
+    loginEmail.focus();
+    return;
+  }
+
   const email = loginEmail.value.trim();
   const password = loginPassword.value;
 
   const validEmail = validateEmailField(loginEmail, loginEmailHint);
-  const validPassword = validatePasswordField(loginPassword, loginPasswordHint);
+  const validPassword = validatePasswordField(
+    loginPassword,
+    loginPasswordHint,
+    {
+      minLength: 6,
+      requireUppercase: false,
+    }
+  );
 
   if (!validEmail) {
     loginEmail.focus();
@@ -142,22 +196,59 @@ async function handleLoginSubmit(event) {
       body: { email, password },
     });
 
+    loginAttempts = 0;
+    loginBlockedUntil = 0;
+
     saveSession(data.token, data.user);
-    showAlert(loginAlert, "success", "Inicio de sesión exitoso. Redirigiendo...");
+
+    showAlert(
+      loginAlert,
+      "success",
+      "Inicio de sesión exitoso. Redirigiendo..."
+    );
 
     await sleep(400);
     enterProtectedView();
   } catch (error) {
+    if (
+      error instanceof ApiError ||
+      error instanceof AuthError
+    ) {
+      loginAttempts++;
+
+      if (loginAttempts >= MAX_LOGIN_ATTEMPTS) {
+        loginBlockedUntil =
+          Date.now() + BLOCK_TIME;
+
+        loginAttempts = 0;
+
+        showAlert(
+          loginAlert,
+          "error",
+          "Demasiados intentos fallidos. El inicio de sesión estará bloqueado durante 60 segundos."
+        );
+
+        loginEmail.focus();
+        return;
+      }
+    }
+
     handleFormError(error, {
       alertEl: loginAlert,
       fieldsByKeyword: [
         {
-          keywords: ["user not found", "usuario no encontrado"],
+          keywords: [
+            "user not found",
+            "usuario no encontrado",
+          ],
           input: loginEmail,
           hint: loginEmailHint,
         },
         {
-          keywords: ["invalid password", "contraseña inválida"],
+          keywords: [
+            "invalid password",
+            "contraseña inválida",
+          ],
           input: loginPassword,
           hint: loginPasswordHint,
         },
@@ -178,14 +269,23 @@ function handleFormError(error, { alertEl, fieldsByKeyword, fallbackInput }) {
 
   if (error instanceof ApiError) {
     const lowerMsg = (error.message || "").toLowerCase();
+
     const match = fieldsByKeyword.find((field) =>
-      field.keywords.some((keyword) => lowerMsg.includes(keyword))
+      field.keywords.some((keyword) =>
+        lowerMsg.includes(keyword)
+      )
     );
 
     showAlert(alertEl, "error", error.message);
 
     if (match) {
-      setFieldState(match.input, match.hint, "error", error.message);
+      setFieldState(
+        match.input,
+        match.hint,
+        "error",
+        error.message
+      );
+
       match.input.focus();
     } else if (fallbackInput) {
       fallbackInput.focus();
@@ -195,11 +295,31 @@ function handleFormError(error, { alertEl, fieldsByKeyword, fallbackInput }) {
   }
 
   if (error instanceof AuthError) {
-    showAlert(alertEl, "error", error.message);
+    clearSession();
+
+    clearTeamsView();
+
+    formLogin.reset();
+
+    showView("login");
+
+    loginEmail.focus();
+
+    showAlert(
+      loginAlert,
+      "error",
+      error.message
+    );
+
     return;
   }
 
-  showAlert(alertEl, "error", "Ocurrió un error inesperado. Intenta de nuevo.");
+  showAlert(
+    alertEl,
+    "error",
+    "Ocurrió un error inesperado. Intenta de nuevo."
+  );
+
   console.error(error);
 }
 
@@ -211,14 +331,60 @@ export function enterProtectedView() {
     : "Sesión activa.";
 
   showView("protected");
+
   loadTeams();
 }
 
 function handleLogout() {
+  loginAttempts = 0;
+  loginBlockedUntil = 0;
+
   clearSession();
+
+  clearTeamsView();
+
   formLogin.reset();
   formRegister.reset();
+
   hideAlert(loginAlert);
   hideAlert(registerAlert);
+
+  setFieldState(
+    loginEmail,
+    loginEmailHint,
+    "neutral",
+    ""
+  );
+
+  setFieldState(
+    loginPassword,
+    loginPasswordHint,
+    "neutral",
+    ""
+  );
+
+  setFieldState(
+    registerName,
+    registerNameHint,
+    "neutral",
+    ""
+  );
+
+  setFieldState(
+    registerEmail,
+    registerEmailHint,
+    "neutral",
+    ""
+  );
+
+  setFieldState(
+    registerPassword,
+    registerPasswordHint,
+    "neutral",
+    ""
+  );
+
   showView("login");
+
+  loginEmail.focus();
 }

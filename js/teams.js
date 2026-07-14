@@ -15,9 +15,16 @@ const reloadTeamsBtn =
 const protectedAlert =
   document.getElementById("protected-alert");
 
-const viewLogin =
-  document.getElementById("view-login");
+const loginAlert =
+  document.getElementById("login-alert");
 
+const loginEmail =
+  document.getElementById("login-email");
+
+const userGreeting =
+  document.getElementById("user-greeting");
+
+/*Configura el evento para actualizar los equipos.*/
 export function setupTeams() {
   if (!reloadTeamsBtn) {
     return;
@@ -25,7 +32,7 @@ export function setupTeams() {
 
   reloadTeamsBtn.addEventListener(
     "click",
-    loadTeams,
+    loadTeams
   );
 }
 
@@ -43,30 +50,90 @@ function setTeamsStatus(state, message) {
 
   teamsStatus.dataset.state = state;
   teamsStatus.textContent = message;
+
+  teamsStatus.classList.remove(
+    "idle",
+    "loading",
+    "success",
+    "error"
+  );
+
+  teamsStatus.classList.add(state);
 }
 
-/*Carga los equipos utilizando el JWT.*/
+export function clearTeamsView() {
+  if (teamsGrid) {
+    teamsGrid.replaceChildren();
+  }
+
+  if (userGreeting) {
+    userGreeting.textContent = "";
+  }
+
+  setTeamsStatus(
+    "idle",
+    "Debes iniciar sesión para consultar los equipos."
+  );
+}
+
+/**
+ * Controla una sesión inválida o expirada.
+ *
+ * @param {string} message
+ */
+function handleInvalidSession(message) {
+  clearSession();
+  clearTeamsView();
+
+  if (protectedAlert) {
+    hideAlert(protectedAlert);
+  }
+
+  showView("login");
+
+  if (loginAlert) {
+    showAlert(
+      loginAlert,
+      "error",
+      message
+    );
+  }
+
+  if (loginEmail) {
+    loginEmail.focus();
+  }
+}
+
+
 export async function loadTeams() {
   if (protectedAlert) {
     hideAlert(protectedAlert);
   }
 
   if (teamsGrid) {
-    teamsGrid.innerHTML = "";
+    teamsGrid.replaceChildren();
   }
 
-  setButtonLoading(reloadTeamsBtn, true);
+  if (reloadTeamsBtn) {
+    setButtonLoading(
+      reloadTeamsBtn,
+      true
+    );
+  }
 
   setTeamsStatus(
     "loading",
-    "Cargando equipos del Mundial 2026...",
+    "Cargando equipos del Mundial 2026..."
   );
 
   try {
-    const data = await apiRequest("/get/teams", {
-      method: "GET",
-      auth: true,
-    });
+    const data = await apiRequest(
+      "/get/teams",
+      {
+        method: "GET",
+        auth: true,
+      }
+    );
 
     const teams = Array.isArray(data)
       ? data
@@ -75,10 +142,13 @@ export async function loadTeams() {
         data?.results ||
         [];
 
-    if (!Array.isArray(teams) || teams.length === 0) {
+    if (
+      !Array.isArray(teams) ||
+      teams.length === 0
+    ) {
       setTeamsStatus(
         "error",
-        "La API no devolvió equipos.",
+        "La API no devolvió equipos."
       );
 
       return;
@@ -88,39 +158,27 @@ export async function loadTeams() {
 
     setTeamsStatus(
       "success",
-      `${teams.length} equipos cargados correctamente.`,
+      `${teams.length} equipos cargados correctamente.`
     );
-    } catch (error) {
+  } catch (error) {
     console.error(
       "Error al cargar los equipos:",
-      error,
+      error
     );
 
-      if (error instanceof AuthError) {
-    clearSession();
-
-    if (protectedAlert) {
-      showAlert(
-        protectedAlert,
-        "Sesión inválida o expirada. Inicia sesión nuevamente.",
-        "error",
+    if (error instanceof AuthError) {
+      handleInvalidSession(
+        error.message ||
+          "Sesión inválida o expirada. Inicia sesión nuevamente."
       );
+
+      return;
     }
-
-    setTeamsStatus(
-      "error",
-      "Sesión inválida o expirada.",
-    );
-
-    showView("login");
-
-    return;
-  }
 
     if (error instanceof NetworkError) {
       setTeamsStatus(
         "error",
-        `⚠️ ${error.message}`,
+        `⚠️ ${error.message}`
       );
 
       return;
@@ -130,7 +188,7 @@ export async function loadTeams() {
       setTeamsStatus(
         "error",
         error.message ||
-          "La API no pudo devolver los equipos.",
+          "La API no pudo devolver los equipos."
       );
 
       return;
@@ -138,80 +196,130 @@ export async function loadTeams() {
 
     setTeamsStatus(
       "error",
-      error.message ||
-        "No se pudieron cargar los equipos.",
+      error?.message ||
+        "No se pudieron cargar los equipos."
     );
   } finally {
-    setButtonLoading(reloadTeamsBtn, false);
+    if (reloadTeamsBtn) {
+      setButtonLoading(
+        reloadTeamsBtn,
+        false
+      );
+    }
   }
+}
 
 /**
- * Renderiza las tarjetas de los equipos.
+ * Convierte un valor recibido de la API
+ * en texto seguro.
  *
+ * @param {unknown} value
+ * @param {string} fallback
+ * @returns {string}
+ */
+function getSafeText(value, fallback = "") {
+  if (
+    typeof value === "string" ||
+    typeof value === "number"
+  ) {
+    const text = String(value).trim();
+    return text || fallback;
+  }
+
+  return fallback;
+}
+
+/**
+ * Obtiene el nombre del grupo.
+ *
+ * @param {unknown} groupValue
+ * @returns {string}
+ */
+function getGroupName(groupValue) {
+  if (
+    groupValue &&
+    typeof groupValue === "object"
+  ) {
+    return getSafeText(
+      groupValue.name ||
+        groupValue.title ||
+        groupValue.group,
+      "Sin asignar"
+    );
+  }
+
+  return getSafeText(
+    groupValue,
+    "Sin asignar"
+  );
+}
+
+/**
  * @param {Array<object>} teams
  */
-function renderTeams(teams) {
-  if (!teamsGrid) {
+export function renderTeams(teams) {
+  if (
+    !teamsGrid ||
+    !Array.isArray(teams)
+  ) {
     return;
   }
 
-  teamsGrid.innerHTML = "";
+  teamsGrid.replaceChildren();
 
   const fragment =
     document.createDocumentFragment();
 
   teams.forEach((team) => {
-    /*
-     * Distintos nombres que podría utilizar la API.
-     */
-    const name =
+    if (
+      !team ||
+      typeof team !== "object"
+    ) {
+      return;
+    }
+
+    const name = getSafeText(
       team.name_en ||
-      team.name_es ||
-      team.name ||
-      team.country ||
-      team.team_name ||
-      "Equipo sin nombre";
+        team.name_es ||
+        team.name ||
+        team.country ||
+        team.team_name,
+      "Equipo sin nombre"
+    );
 
-    const code =
+    const code = getSafeText(
       team.fifa_code ||
-      team.code ||
-      team.short_code ||
-      team.iso2 ||
-      team.iso3 ||
-      "---";
+        team.code ||
+        team.short_code ||
+        team.iso2 ||
+        team.iso3,
+      "---"
+    );
 
-    const groupValue =
+    const group = getGroupName(
       team.group ||
-      team.groups ||
-      team.group_name ||
-      "Sin asignar";
+        team.groups ||
+        team.group_name
+    );
 
-    const group =
-      typeof groupValue === "object"
-        ? groupValue?.name ||
-          groupValue?.title ||
-          "Sin asignar"
-        : groupValue;
-
-    const flag =
+    const flag = getSafeText(
       team.flag ||
-      team.flag_url ||
-      team.logo ||
-      team.image ||
-      team.image_url ||
-      "";
-
+        team.flag_url ||
+        team.logo ||
+        team.image ||
+        team.image_url
+    );
 
     const card =
       document.createElement("article");
 
     card.className = "team-card";
     card.tabIndex = 0;
+
     card.setAttribute(
       "aria-label",
-      `${name}, código ${code}, grupo ${group}`,
+      `${name}, código FIFA ${code}, grupo ${group}`
     );
-
 
     const flagContainer =
       document.createElement("div");
@@ -227,23 +335,35 @@ function renderTeams(teams) {
       flagImage.src = flag;
       flagImage.alt = `Bandera de ${name}`;
       flagImage.loading = "lazy";
+      flagImage.referrerPolicy =
+        "no-referrer";
 
       flagImage.addEventListener(
         "error",
         () => {
-          flagContainer.innerHTML = "";
+          flagImage.remove();
           flagContainer.textContent = "🏳️";
+          flagContainer.setAttribute(
+            "aria-label",
+            `Bandera no disponible para ${name}`
+          );
         },
         {
           once: true,
-        },
+        }
       );
 
-      flagContainer.appendChild(flagImage);
+      flagContainer.appendChild(
+        flagImage
+      );
     } else {
       flagContainer.textContent = "🏳️";
-    }
 
+      flagContainer.setAttribute(
+        "aria-label",
+        `Bandera no disponible para ${name}`
+      );
+    }
 
     const information =
       document.createElement("div");
@@ -266,23 +386,25 @@ function renderTeams(teams) {
     const groupElement =
       document.createElement("p");
 
-    groupElement.className = "team-group";
+    groupElement.className =
+      "team-group";
+
     groupElement.textContent =
       `Grupo: ${group}`;
 
     information.append(
       title,
       codeElement,
-      groupElement,
+      groupElement
     );
 
     card.append(
       flagContainer,
-      information,
+      information
     );
 
     fragment.appendChild(card);
   });
 
   teamsGrid.appendChild(fragment);
-}}
+}

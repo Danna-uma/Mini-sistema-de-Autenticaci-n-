@@ -4,7 +4,7 @@ import { getToken } from "./storage.js";
 
 /**
  * Convierte la respuesta HTTP en JSON o texto.
- *
+ 
  * @param {Response} response
  * @returns {Promise<any>}
  */
@@ -50,12 +50,7 @@ function getErrorMessage(data, defaultMessage) {
   }
 
   if (data && typeof data === "object") {
-    return (
-      data.message ||
-      data.error ||
-      data.msg ||
-      defaultMessage
-    );
+    return (data.message ||data.error ||data.msg ||defaultMessage);
   }
 
   return defaultMessage;
@@ -132,10 +127,8 @@ export async function apiRequest(
 
   if (response.status === 401) {
     throw new AuthError(
-      getErrorMessage(
-        data,
-        "La sesión es inválida o ha expirado.",
-      ),
+      data?.message ||
+        "Tu sesión ha expirado. Inicia sesión nuevamente."
     );
   }
 

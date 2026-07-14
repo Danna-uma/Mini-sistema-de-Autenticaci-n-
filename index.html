@@ -73,7 +73,7 @@
 
           <div class="field">
             <label for="register-password">Contraseña</label>
-            <input type="password" id="register-password" name="password" autocomplete="new-password" placeholder="Mínimo 6 caracteres" required aria-describedby="register-password-hint" tabindex="3">
+            <input type="password" id="register-password" name="password" autocomplete="new-password" placeholder="Mínimo 6 caracteres y una mayuscula" required aria-describedby="register-password-hint" tabindex="3">
             <span class="field-hint" id="register-password-hint" aria-live="polite"></span>
           </div>
 
@@ -146,6 +146,53 @@
     </footer>
 
   </div>
+
+      <div class="accessibility-floating" tabindex="6">
+      <button
+        type="button"
+        id="accessibility-toggle"
+        class="accessibility-toggle"
+        aria-label="Abrir controles de accesibilidad"
+        aria-expanded="false"
+        aria-controls="accessibility-menu"
+      >
+        Aa
+      </button>
+
+      <div
+        id="accessibility-menu"
+        class="accessibility-menu hidden"
+        role="group"
+        aria-label="Controles de tamaño del texto"
+      >
+        <button
+          type="button"
+          id="font-decrease"
+          class="accessibility-option"
+          aria-label="Disminuir tamaño del texto"
+        >
+          A−
+        </button>
+
+        <button
+          type="button"
+          id="font-reset"
+          class="accessibility-option"
+          aria-label="Restablecer tamaño del texto"
+        >
+          A
+        </button>
+
+        <button
+          type="button"
+          id="font-increase"
+          class="accessibility-option"
+          aria-label="Aumentar tamaño del texto"
+        >
+          A+
+        </button>
+      </div>
+    </div>
 
   <script type="module" src="js/app.js"></script>
 </body>

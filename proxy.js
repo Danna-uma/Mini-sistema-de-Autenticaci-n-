@@ -30,11 +30,6 @@ function addCorsHeaders(response) {
 }
 
 /**
- * Envía una respuesta JSON generada por el proxy.
- *
- * Esta función solamente se utiliza para errores internos
- * del proxy, no para modificar respuestas de la API.
- *
  * @param {http.ServerResponse} response
  * @param {number} statusCode
  * @param {object} data
@@ -88,32 +83,68 @@ function readRequestBody(request) {
 }
 
 /**
- * Construye los encabezados que se enviarán a la API pública.
- *
- * Se reenvían:
- * - Content-Type
- * - Authorization Bearer
- * - Accept
- *
+ * @param {http.IncomingMessage} request
+ * @returns {boolean}
+ */
+function hasValidJwtFormat(request) {
+  const authorization =
+    request.headers.authorization;
+
+  if (
+    !authorization ||
+    !authorization.startsWith("Bearer ")
+  ) {
+    return false;
+  }
+
+  const token = authorization
+    .slice(7)
+    .trim();
+
+  const tokenParts = token.split(".");
+
+  return (
+    tokenParts.length === 3 &&
+    tokenParts.every(
+      (part) => part.length > 0,
+    )
+  );
+}
+
+/**
  * @param {http.IncomingMessage} request
  * @returns {Headers}
  */
 function createForwardHeaders(request) {
   const headers = new Headers();
 
-  const contentType = request.headers["content-type"];
-  const authorization = request.headers.authorization;
-  const accept = request.headers.accept;
+  const contentType =
+    request.headers["content-type"];
+
+  const authorization =
+    request.headers.authorization;
+
+  const accept =
+    request.headers.accept;
 
   if (contentType) {
-    headers.set("Content-Type", contentType);
+    headers.set(
+      "Content-Type",
+      contentType,
+    );
   }
 
   if (authorization) {
-    headers.set("Authorization", authorization);
+    headers.set(
+      "Authorization",
+      authorization,
+    );
   }
 
-  headers.set("Accept", accept || "application/json");
+  headers.set(
+    "Accept",
+    accept || "application/json",
+  );
 
   return headers;
 }
@@ -125,13 +156,34 @@ function createForwardHeaders(request) {
  * @param {http.ServerResponse} response
  * @param {URL} localUrl
  */
-async function forwardRequest(request, response, localUrl) {
-  const method = request.method || "GET";
-  const route = `${method} ${localUrl.pathname}`;
+async function forwardRequest(
+  request,
+  response,
+  localUrl,
+) {
+  const method =
+    request.method || "GET";
+
+  const route =
+    `${method} ${localUrl.pathname}`;
 
   if (!ALLOWED_ROUTES.has(route)) {
     sendJson(response, 404, {
-      message: "Ruta no encontrada en el proxy.",
+      message:
+        "Ruta no encontrada en el proxy.",
+    });
+
+    return;
+  }
+
+  if (
+    method === "GET" &&
+    localUrl.pathname === "/get/teams" &&
+    !hasValidJwtFormat(request)
+  ) {
+    sendJson(response, 401, {
+      message:
+        "Sesión inválida o expirada.",
     });
 
     return;
@@ -147,13 +199,23 @@ async function forwardRequest(request, response, localUrl) {
   };
 
   if (method === "POST") {
-    fetchOptions.body = await readRequestBody(request);
+    fetchOptions.body =
+      await readRequestBody(request);
   }
 
-  console.log(`${method} ${localUrl.pathname}`);
-  console.log(`Reenviando a: ${publicUrl}`);
+  console.log(
+    `${method} ${localUrl.pathname}`,
+  );
 
-  const publicResponse = await fetch(publicUrl, fetchOptions);
+  console.log(
+    `Reenviando a: ${publicUrl}`,
+  );
+
+  const publicResponse =
+    await fetch(
+      publicUrl,
+      fetchOptions,
+    );
 
   const responseBody = Buffer.from(
     await publicResponse.arrayBuffer(),
@@ -162,7 +224,9 @@ async function forwardRequest(request, response, localUrl) {
   addCorsHeaders(response);
 
   const responseContentType =
-    publicResponse.headers.get("content-type");
+    publicResponse.headers.get(
+      "content-type",
+    );
 
   if (responseContentType) {
     response.setHeader(
@@ -175,7 +239,9 @@ async function forwardRequest(request, response, localUrl) {
       "application/json; charset=utf-8",
     );
   }
-  response.statusCode = publicResponse.status;
+
+  response.statusCode =
+    publicResponse.status;
 
   response.end(responseBody);
 
@@ -184,12 +250,10 @@ async function forwardRequest(request, response, localUrl) {
   );
 }
 
-/*Servidor HTTP local.*/
 const server = http.createServer(
   async (request, response) => {
     addCorsHeaders(response);
 
-    /*Respuesta a la petición previa CORS realizada automáticamente por el navegador.*/
     if (request.method === "OPTIONS") {
       response.writeHead(204);
       response.end();
@@ -208,12 +272,18 @@ const server = http.createServer(
         localUrl,
       );
     } catch (error) {
-      console.error("Error en el proxy:", error);
+      console.error(
+        "Error en el proxy:",
+        error,
+      );
 
-      if (error.code === "BODY_TOO_LARGE") {
+      if (
+        error.code === "BODY_TOO_LARGE"
+      ) {
         if (!response.headersSent) {
           sendJson(response, 400, {
-            message: error.message,
+            message:
+              error.message,
           });
         }
 
@@ -235,32 +305,50 @@ const server = http.createServer(
 );
 
 /*Maneja errores HTTP enviados por el cliente.*/
-server.on("clientError", (error, socket) => {
-  console.error(
-    "Petición HTTP inválida:",
-    error.message,
-  );
-
-  if (socket.writable) {
-    socket.end(
-      "HTTP/1.1 400 Bad Request\r\n" +
-        "Content-Type: application/json\r\n" +
-        "Connection: close\r\n" +
-        "\r\n" +
-        JSON.stringify({
-          message: "Petición HTTP inválida.",
-        }),
+server.on(
+  "clientError",
+  (error, socket) => {
+    console.error(
+      "Petición HTTP inválida:",
+      error.message,
     );
-  }
-});
+
+    if (socket.writable) {
+      socket.end(
+        "HTTP/1.1 400 Bad Request\r\n" +
+          "Content-Type: application/json\r\n" +
+          "Connection: close\r\n" +
+          "\r\n" +
+          JSON.stringify({
+            message:
+              "Petición HTTP inválida.",
+          }),
+      );
+    }
+  },
+);
 
 
-server.listen(PORT, HOST, () => {
-  console.log("");
-  console.log("====================================");
-  console.log("PROXY LOCAL INICIADO");
-  console.log(`Dirección: http://${HOST}:${PORT}`);
-  console.log(`API pública: ${PUBLIC_API_BASE}`);
-  console.log("====================================");
-  console.log("");
-});
+server.listen(
+  PORT,
+  HOST,
+  () => {
+    console.log("");
+    console.log(
+      "====================================",
+    );
+    console.log(
+      "PROXY LOCAL INICIADO",
+    );
+    console.log(
+      `Dirección: http://${HOST}:${PORT}`,
+    );
+    console.log(
+      `API pública: ${PUBLIC_API_BASE}`,
+    );
+    console.log(
+      "====================================",
+    );
+    console.log("");
+  },
+);
